@@ -1,0 +1,240 @@
+import { Composer, InlineKeyboard } from "grammy";
+
+import { env } from "../config/env";
+import { CommandsHelper } from "../util/commands-helper";
+import {
+  DISCUSSION_GROUP,
+  DONATION_LINK,
+  GITHUB_REPO,
+  UPDATES_CHANNEL,
+} from "../config/constants";
+
+const composer = new Composer();
+
+type HelpSection = "howto" | "scores" | "group" | "admin";
+
+export function formatActiveButton(label: string, active: boolean) {
+  return active ? `« ${label} »` : label;
+}
+
+export function getMainHelpKeyboard(
+  shouldShowAdmin: boolean,
+  active: HelpSection = "howto",
+) {
+  const keyboard = new InlineKeyboard()
+    .text(formatActiveButton("How to Play", active === "howto"), "help_howto")
+    .style(active == "howto" ? "primary" : undefined)
+    .text(
+      formatActiveButton("Leaderboard & Scores", active === "scores"),
+      "help_scores",
+    )
+    .style(active == "scores" ? "primary" : undefined)
+    .row()
+    .text(
+      formatActiveButton("Group Settings", active === "group"),
+      "help_group",
+    )
+    .style(active == "group" ? "primary" : undefined);
+
+  if (GITHUB_REPO) keyboard.url("GitHub Repo", GITHUB_REPO);
+
+  if (shouldShowAdmin) {
+    keyboard
+      .row()
+      .text(
+        formatActiveButton("👑 Admin Commands", active === "admin"),
+        "help_admin",
+      )
+      .style(active == "admin" ? "primary" : undefined);
+  }
+
+  if (UPDATES_CHANNEL || DONATION_LINK || DISCUSSION_GROUP) keyboard.row();
+  if (UPDATES_CHANNEL) keyboard.url("📢 Updates", UPDATES_CHANNEL);
+  if (DONATION_LINK) keyboard.url("💓 Donate", DONATION_LINK).success();
+  if (DISCUSSION_GROUP) keyboard.url("💬 Discussion", DISCUSSION_GROUP);
+
+  return keyboard;
+}
+
+export function getHowToPlayMessage() {
+  return `<b>▸ How to Play World Zuno</b>
+
+World Zuno has two game modes: <b>Map Mode</b> and <b>Flag Mode</b>.
+
+<b>🗺 Map Mode</b><blockquote>1. Start a game using <code>/newworld</code>
+2. The bot sends a silhouette map of a random country
+3. Guess the country by sending its name in chat
+4. After each guess, the bot shows how far your guess is from the correct country
+5. Use the distance, direction arrows, and hints to narrow it down
+6. The first person to guess correctly wins the game
+7. The winner receives <b>10 points</b>
+8. Each game allows a maximum of <b>20 guesses</b>
+</blockquote>
+<b>🚩 Flag Mode</b><blockquote>1. Start a game using <code>/newflag</code>
+2. The bot sends the flag of a random country
+3. Guess the country by sending its name in chat
+4. After each guess, the bot shows how far your guess is from the correct country
+5. Use the distance, direction arrows, and hints to narrow it down
+6. The first person to guess correctly wins the game
+7. The winner receives <b>10 points</b>
+8. Each game allows a maximum of <b>20 guesses</b>
+</blockquote>
+<b>Distance & Direction</b><blockquote>Each guess shows how far your country is from the correct one.
+
+Example
+Brazil — <b>4200 km ↗</b>
+
+The arrow shows the direction of the correct country:
+↑ North
+↓ South
+→ East
+← West
+↗ ↘ ↖ ↙ Diagonal directions
+</blockquote>
+<b>Neighbor Hint</b><blockquote>If your guess shares a border with the correct country, the bot will show:
+
+<b>🟢 Neighbor</b>
+
+This means the correct country directly borders your guess.
+</blockquote>
+<b>Progressive Hints</b><blockquote>As the game continues, extra hints will appear (same for both modes):
+
+After 5 guesses — Continent
+After 8 guesses — Neighboring country
+After 10 guesses — Another neighbor
+After 12 guesses — Driving side (left/right)
+After 14 guesses — First day of the week
+
+Use these hints to help narrow down the correct country before the <b>20 guess limit</b>.
+</blockquote>
+<b>Basic Commands</b>
+• /newworld — Start a new Map mode game
+• /newflag — Start a new Flag mode game
+• /endworld — End the current game (admin or vote)
+• /leaderboard — Show top players
+• /score — Show your score or another user's score
+• /help — Show this help message
+
+<b>Tips</b><blockquote>• In Map mode, study the silhouette carefully
+• In Flag mode, think about flag colors, symbols, and patterns
+• Use direction arrows to move your guesses closer
+• A "Neighbor" guess means you're very close
+• Think geographically — continents and regions help a lot
+</blockquote>`;
+}
+
+export function getScoresMessage() {
+  return `<b>▸ Leaderboard & Scores</b>
+
+Scores are tracked separately for <b>🗺 Map</b> and <b>🚩 Flag</b> modes. Use the mode toggle buttons on the leaderboard to switch between them.
+
+<b>Quick Examples:</b>
+<blockquote><code>/leaderboard</code> - Group leaderboard (Map mode)
+<code>/leaderboard flag</code> - Group leaderboard (Flag mode)
+<code>/leaderboard global</code> - Global leaderboard (Map mode)
+<code>/leaderboard global flag</code> - Global leaderboard (Flag mode)
+
+<code>/score</code> - Your score in the current group
+<code>/score @username</code> - View another user's score
+<code>/score 123456789</code> - View score by user ID
+<code>/score global</code> - Your global score
+<code>/score flag</code> - Your Flag mode score</blockquote>
+
+<b>Leaderboard Command</b>
+<blockquote><b>Syntax:</b> <code>/leaderboard [scope] [mode]</code>
+
+<b>Scope:</b>
+• <code>group</code> (default) - Current group only
+• <code>global</code> - All groups combined
+
+<b>Mode:</b>
+• <code>map</code> (default) - Map mode scores
+• <code>flag</code> - Flag mode scores</blockquote>
+
+<b>Score Command</b>
+<blockquote><b>Syntax:</b> <code>/score [target] [scope] [mode]</code>
+
+<b>Target (optional):</b>
+• Leave empty for your own score
+• <code>@username</code> - Look up by username
+• <code>user_id</code> - Look up by Telegram user ID
+
+<b>Mode (optional):</b>
+• <code>map</code> (default) - Map mode scores
+• <code>flag</code> - Flag mode scores</blockquote>`;
+}
+
+export function getGroupSettingsMessage() {
+  return `<b>▸ Group Settings (Admin Only)</b>
+
+<b>Authorized Users</b>
+<blockquote><b>/worldauth</b> – Manage users who can end games without a vote.
+
+<b>Usage:</b>
+• <code>/worldauth @username</code> – Authorize a user
+• <code>/worldauth remove @username</code> – Remove authorization
+• <code>/worldauth list</code> – List all authorized users
+
+You can also use a user ID or reply to a message instead of @username.</blockquote>
+
+<b>Game Topic (Forum Groups)</b>
+<blockquote><b>/setgametopic</b> – Restrict games to specific topics
+Run this command <i>inside the topic</i> where you want games to run.
+
+After setting, the bot will only allow games inside configured topics.
+
+<b>/unsetgametopic</b> – Remove topic restriction
+Usage: <code>/unsetgametopic</code>
+
+After removing the restriction, games can run in any topic again.</blockquote>
+
+<b>Allowed Game Modes (Forum Groups)</b>
+<blockquote><b>/allowonlymode</b> – Restrict which game modes can be started in a topic.
+Run this command <i>inside the topic</i> you want to configure.
+Requires <code>/setgametopic</code> to be set first.
+
+<b>Usage:</b>
+• <code>/allowonlymode map</code> – Allow only Map mode
+• <code>/allowonlymode flag</code> – Allow only Flag mode
+• <code>/allowonlymode map flag</code> – Allow both modes (default)
+
+When a mode is restricted, the bot will suggest the correct command if a user tries to start a disallowed mode.
+
+<b>/recreatetopic</b> – Auto-recreate topic when it expires
+Usage: <code>/recreatetopic on</code> or <code>/recreatetopic off</code>
+Run this command inside a game topic.
+
+When enabled, if the topic automatically expires (Telegram forum feature), the bot will recreate the same topic so games can continue.</blockquote>`;
+}
+
+export function getAdminCommandsMessage() {
+  return `<b>▸ Admin Commands (Bot Owner Only)</b>
+
+<blockquote><b>/stats</b>
+View bot statistics including:
+• Total users and groups
+• CPU usage
+• Memory usage
+• Bot performance</blockquote>`;
+}
+
+composer.command("help", async (ctx) => {
+  if (!ctx.from) return;
+
+  const shouldShowAdmin =
+    env.ADMIN_USERS.includes(ctx.from.id) && ctx.chat.type === "private";
+
+  const keyboard = getMainHelpKeyboard(shouldShowAdmin, "howto");
+
+  await ctx.reply(getHowToPlayMessage(), {
+    parse_mode: "HTML",
+    reply_markup: keyboard,
+  });
+});
+
+CommandsHelper.addNewCommand(
+  "help",
+  "Get help on how to play World Zuno and commands list",
+);
+
+export const helpCommand = composer;

@@ -1,0 +1,39 @@
+import { autoRetry } from "@grammyjs/auto-retry";
+import { run, sequentialize } from "@grammyjs/runner";
+
+import { bot } from "./config/bot";
+import { commands } from "./commands";
+import { errorHandler } from "./handlers/error-handler";
+import { onMessageHander } from "./handlers/on-message";
+import { CommandsHelper } from "./util/commands-helper";
+import { callbackQueryHandler } from "./handlers/callback-query";
+import { handleBannedUsers } from "./handlers/handle-banned-users";
+import { topicEditedHandler } from "./handlers/topic-edited-handler";
+import { userAndChatSyncHandler } from "./handlers/user-and-chat-sync-handler";
+
+bot.api.config.use(autoRetry());
+bot.use(userAndChatSyncHandler);
+bot.use(topicEditedHandler);
+
+bot.use(
+  sequentialize((ctx) => {
+    if (ctx.callbackQuery) return undefined;
+    if (ctx.chat?.type === "private") return undefined;
+
+    return ctx.chatId?.toString() || ctx.from?.id.toString();
+  }),
+);
+
+bot.use(handleBannedUsers);
+
+bot.use(commands);
+bot.use(onMessageHander);
+bot.use(callbackQueryHandler);
+
+bot.catch(errorHandler);
+
+await bot.api.deleteWebhook({ drop_pending_updates: true });
+run(bot);
+console.log("Bot started");
+
+await CommandsHelper.setCommands();
