@@ -44,7 +44,7 @@ Ready to test your geography skills? Let's play!`;
 
   try {
     await ctx.replyWithPhoto(
-      new InputFile(createReadStream("./src/data/banner.png")),
+      new InputFile(createReadStream("./src/data/banner.jpg")),
       {
         caption,
         parse_mode: "HTML",
